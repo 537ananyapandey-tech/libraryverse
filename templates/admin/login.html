@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Admin sign in{% endblock %}
+{% block content %}
+<section class="container narrow">
+  <div class="panel form-panel">
+    <h1>Admin sign in</h1>
+    <p class="muted">Add books, manage stock and review every loan.</p>
+    <form method="post" action="{{ url_for('admin.login') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" required autocomplete="username" value="{{ username }}">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-lg" type="submit">{{ icon('shield', 18) }} Sign in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

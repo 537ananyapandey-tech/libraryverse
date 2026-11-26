@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Explore books{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+  <h1>Explore books</h1>
+  <p class="muted">Search by title, author or ISBN, then narrow by branch, subject or availability.</p>
+</div>
+
+<section class="container" id="catalogue" data-endpoint="{{ url_for('api.books') }}">
+  <form class="filters" id="filters" role="search" autocomplete="off" onsubmit="return false">
+    <div class="field field-search">
+      <label for="f-q">Search</label>
+      <div class="input-icon">{{ icon('search', 18) }}
+        <input id="f-q" name="q" type="search" placeholder="Try “python”, “Norvig” or an ISBN" value="{{ args.get('q', '') }}">
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-category">Branch</label>
+      <select id="f-category" name="category">
+        <option value="">All branches</option>
+        {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if args.get('category') == c.id|string }}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-subject">Subject</label>
+      <select id="f-subject" name="subject">
+        <option value="">All subjects</option>
+        {% for s in subjects %}<option value="{{ s }}" {{ 'selected' if args.get('subject') == s }}>{{ s }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-availability">Availability</label>
+      <select id="f-availability" name="availability">
+        <option value="">Any</option>
+        <option value="available" {{ 'selected' if args.get('availability') == 'available' }}>In stock</option>
+        <option value="unavailable" {{ 'selected' if args.get('availability') == 'unavailable' }}>Fully issued</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-sort">Sort by</label>
+      <select id="f-sort" name="sort">
+        <option value="title" {{ 'selected' if args.get('sort', 'title') == 'title' }}>Title A to Z</option>
+        <option value="title_desc" {{ 'selected' if args.get('sort') == 'title_desc' }}>Title Z to A</option>
+        <option value="newest" {{ 'selected' if args.get('sort') == 'newest' }}>Recently added</option>
+        <option value="popular" {{ 'selected' if args.get('sort') == 'popular' }}>Most issued</option>
+        <option value="available" {{ 'selected' if args.get('sort') == 'available' }}>Most copies in</option>
+      </select>
+    </div>
+    <div class="view-toggle" role="group" aria-label="Layout">
+      <button type="button" class="icon-btn" data-view="grid" aria-pressed="true" aria-label="Grid view">{{ icon('grid', 18) }}</button>
+      <button type="button" class="icon-btn" data-view="list" aria-pressed="false" aria-label="List view">{{ icon('list', 18) }}</button>
+    </div>
+  </form>
+
+  <div class="result-bar">
+    <p id="result-count" aria-live="polite">Loading books…</p>
+    <button type="button" class="btn btn-ghost btn-sm" id="clear-filters" hidden>Clear filters</button>
+  </div>
+
+  <div id="book-results" class="book-grid" aria-busy="true"></div>
+
+  <div id="skeletons" class="book-grid" hidden aria-hidden="true">
+    {% for _ in range(6) %}<div class="skeleton-card"><div class="sk sk-cover"></div><div class="sk sk-line"></div><div class="sk sk-line short"></div></div>{% endfor %}
+  </div>
+
+  <div id="no-results" hidden>
+    <div class="empty">
+      <svg viewBox="0 0 220 140" width="220" height="140" role="img" aria-label="An empty bookshelf">
+        <rect x="14" y="112" width="192" height="8" rx="4" fill="var(--bg3)"/>
+        <rect x="34" y="52" width="22" height="60" rx="3" fill="var(--purple)" opacity=".85"/>
+        <rect x="60" y="68" width="18" height="44" rx="3" fill="var(--mint)" opacity=".85"/>
+        <rect x="82" y="44" width="24" height="68" rx="3" fill="var(--orange)" opacity=".85"/>
+        <g transform="rotate(24 146 112)"><rect x="132" y="56" width="22" height="56" rx="3" fill="var(--purple)" opacity=".5"/></g>
+        <text x="172" y="46" font-size="30" font-weight="700" fill="var(--muted)" font-family="sans-serif">?</text>
+      </svg>
+      <h3>No books match that search</h3>
+      <p>Check the spelling, try an author's surname, or clear a filter. Missing a title? An admin can add it in seconds.</p>
+    </div>
+  </div>
+
+  <div class="load-more"><button type="button" class="btn btn-ghost" id="load-more" hidden>Load more books</button></div>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/books.js') }}" defer></script>{% endblock %}

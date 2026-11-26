@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, cover, avail_pill, book_card %}
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="container crumbs">
+  <a href="{{ url_for('public.books') }}">{{ icon('arrow-left', 16) }} Back to all books</a>
+</div>
+
+<section class="container detail">
+  <div class="detail-cover">{{ cover(book, 'lg') }}</div>
+
+  <div class="detail-body">
+    <p class="muted">{{ book.category_name }}{% if book.subject %}, {{ book.subject }}{% endif %}</p>
+    <h1>{{ book.title }}</h1>
+    <p class="detail-author">by {{ book.author }}</p>
+
+    {% if book.description %}<p class="detail-desc">{{ book.description }}</p>{% endif %}
+
+    <dl class="facts">
+      <div><dt>Publisher</dt><dd>{{ book.publisher or 'Not specified' }}</dd></div>
+      <div><dt>Edition</dt><dd>{{ book.edition or 'Not specified' }}</dd></div>
+      <div><dt>ISBN</dt><dd>{{ book.isbn or 'Not specified' }}</dd></div>
+      <div><dt>Branch</dt><dd>{{ book.category_name }}</dd></div>
+      <div><dt>Subject</dt><dd>{{ book.subject or 'Not specified' }}</dd></div>
+      <div><dt>Times issued</dt><dd>{{ book.times_issued }}</dd></div>
+      <div><dt>Shelf location</dt><dd>{% if book.has_location %}{{ [book.shelf_block, ('Floor ' ~ book.shelf_floor) if book.shelf_floor, ('Rack ' ~ book.shelf_rack) if book.shelf_rack, ('Shelf ' ~ book.shelf_number) if book.shelf_number]|select|join(', ') }}{% else %}Not specified{% endif %}</dd></div>
+    </dl>
+
+    <div class="stock-box">
+      <div class="stock-top">
+        {{ avail_pill(book) }}
+        <p><strong>{{ book.available_copies }}</strong> of {{ book.total_copies }} copies available</p>
+      </div>
+      <div class="meter" role="img" aria-label="{{ book.available_copies }} of {{ book.total_copies }} copies available">
+        <span style="--w:{{ (book.available_copies * 100 / book.total_copies)|round(1) if book.total_copies else 0 }}%"></span>
+      </div>
+    </div>
+
+    <div class="detail-actions">
+      {% if book.available_copies > 0 and is_admin %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('public.issue_page', book=book.id) }}">Issue this book</a>
+      {% elif book.available_copies > 0 and is_student %}
+        {% if my_loan %}<button class="btn btn-primary btn-lg" disabled aria-disabled="true">Already borrowed by you</button>
+        {% elif my_pending %}<button class="btn btn-primary btn-lg" disabled aria-disabled="true">Request pending approval</button>
+        {% else %}<form method="post" action="{{ url_for('student.request_book', book_id=book.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary btn-lg" type="submit">Request this book</button></form>{% endif %}
+      {% elif book.available_copies > 0 %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('student.login') }}">Sign in to request this book</a>
+      {% else %}
+        <button class="btn btn-primary btn-lg" disabled aria-disabled="true">No copies available</button>
+      {% endif %}
+      <button class="btn btn-ghost btn-lg" type="button" id="locate-btn" aria-expanded="false" aria-controls="locate-panel">{{ icon('search', 18) }} Locate book</button>
+      {% if is_admin %}<a class="btn btn-ghost btn-lg" href="{{ url_for('admin.book_edit', book_id=book.id) }}">{{ icon('pencil', 18) }} Edit book</a>{% endif %}
+    </div>
+    <div class="locate-panel" id="locate-panel" hidden role="region" aria-label="Shelf location">
+      {% if book.has_location %}
+      <dl class="locate-grid">
+        <div><dt>Block / section</dt><dd>{{ book.shelf_block or '-' }}</dd></div>
+        <div><dt>Floor</dt><dd>{{ book.shelf_floor or '-' }}</dd></div>
+        <div><dt>Rack</dt><dd>{{ book.shelf_rack or '-' }}</dd></div>
+        <div><dt>Shelf</dt><dd>{{ book.shelf_number or '-' }}</dd></div>
+      </dl>
+      <p class="muted small">Ask at the desk if you cannot find it.</p>
+      {% else %}<p class="muted">The shelf location for this book has not been added yet. Please ask at the library desk.</p>{% endif %}
+    </div>
+    {% if book.available_copies == 0 %}<p class="muted small">All copies are on loan. Check back after the next return.</p>{% endif %}
+  </div>
+</section>
+
+{% if related %}
+<section class="container section">
+  <div class="section-head"><h2>More in {{ book.category_name }}</h2></div>
+  <div class="book-grid">{% for b in related %}{{ book_card(b) }}{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}

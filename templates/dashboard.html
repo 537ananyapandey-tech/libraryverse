@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, empty_state %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+  <h1>Library dashboard</h1>
+  <p class="muted">Every number below is calculated live from the database.</p>
+</div>
+
+{% if stats.overdue %}
+<div class="container">
+  <div class="banner banner-warn" role="alert">
+    {{ icon('alert', 20) }}
+    <p><strong>{{ stats.overdue }} book{{ 's are' if stats.overdue != 1 else ' is' }} overdue.</strong>
+      Collect {{ 'them' if stats.overdue != 1 else 'it' }} from the <a href="{{ url_for('public.return_page') }}">return desk</a>.</p>
+  </div>
+</div>
+{% endif %}
+
+<section class="container stat-grid" aria-label="Key numbers">
+  <div class="stat s-purple"><span class="stat-label">Total books</span><strong>{{ stats.copies }}</strong><span class="stat-note">{{ stats.titles }} unique titles</span></div>
+  <div class="stat s-mint"><span class="stat-label">Available</span><strong>{{ stats.available }}</strong><span class="stat-note">copies on the shelf</span></div>
+  <div class="stat s-orange"><span class="stat-label">Issued</span><strong>{{ stats.issued }}</strong><span class="stat-note">{{ stats.overdue }} overdue</span></div>
+  <div class="stat s-purple"><span class="stat-label">Students</span><strong>{{ stats.students }}</strong><span class="stat-note">registered</span></div>
+  <div class="stat s-mint"><span class="stat-label">Categories</span><strong>{{ stats.categories }}</strong><span class="stat-note">engineering branches</span></div>
+</section>
+
+<section class="container grid-2">
+  <div class="panel">
+    <h2>Book availability</h2>
+    {% set pct = (stats.available * 100 / stats.copies) if stats.copies else 0 %}
+    <div class="donut-wrap">
+      <div class="donut" style="--p:{{ pct|round(1) }}" role="img"
+           aria-label="{{ stats.available }} of {{ stats.copies }} copies available">
+        <div class="donut-hole"><strong>{{ pct|round|int }}%</strong><span>on the shelf</span></div>
+      </div>
+      <ul class="legend">
+        <li><i class="dot mint"></i>Available <b>{{ stats.available }}</b></li>
+        <li><i class="dot orange"></i>Issued <b>{{ stats.issued }}</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Titles by branch</h2>
+    <div class="bars">
+      {% for c in distribution %}
+      <a class="bar-row" href="{{ url_for('public.books', category=c.id) }}" style="--h:{{ c.hue }}">
+        <span class="bar-label" title="{{ c.name }}">{{ c.short_name }}</span>
+        <span class="bar-track"><span class="bar-fill" style="--w:{{ (c.titles * 100 / max_titles)|round(1) }}%"></span></span>
+        <span class="bar-val">{{ c.titles }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="container grid-2">
+  <div class="panel">
+    <h2>Recently issued</h2>
+    <ul class="list">
+      {% for r in recent_issues %}
+      <li style="--h:{{ r.hue }}">
+        <i class="list-dot"></i>
+        <div><a href="{{ url_for('public.book_detail', book_id=r.book_id) }}">{{ r.book_title }}</a>
+          <p class="muted small">{{ r.student_name }}, {{ r.issue_date|fmt_date }}</p></div>
+        {% if r.status == 'overdue' %}<span class="pill overdue">Overdue</span>
+        {% elif r.status == 'returned' %}<span class="pill done">Returned</span>
+        {% else %}<span class="pill ok">Due {{ r.due_date|fmt_date }}</span>{% endif %}
+      </li>
+      {% else %}<li class="muted">Nothing has been issued yet.</li>{% endfor %}
+    </ul>
+  </div>
+  <div class="panel">
+    <h2>Most popular</h2>
+    <ul class="list">
+      {% for b in popular %}
+      <li style="--h:{{ b.hue }}">
+        <i class="list-dot"></i>
+        <div><a href="{{ url_for('public.book_detail', book_id=b.id) }}">{{ b.title }}</a>
+          <p class="muted small">{{ b.author.split(',')[0] }}</p></div>
+        <span class="pill done">{{ b.times_issued }} loan{{ 's' if b.times_issued != 1 }}</span>
+      </li>
+      {% else %}<li class="muted">Popular books appear after the first loans.</li>{% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="container grid-2 section-last">
+  <div class="panel">
+    <h2>Recently added</h2>
+    <ul class="list">
+      {% for b in recent_books %}
+      <li style="--h:{{ b.hue }}">
+        <i class="list-dot"></i>
+        <div><a href="{{ url_for('public.book_detail', book_id=b.id) }}">{{ b.title }}</a>
+          <p class="muted small">{{ b.author.split(',')[0] }}</p></div>
+        <span class="chip">{{ b.category_short }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="panel">
+    <h2>Library activity</h2>
+    <ul class="list activity">
+      {% for a in activity %}
+      <li><i class="list-dot act-{{ a.action }}"></i>
+        <div><p>{{ a.detail }}</p><p class="muted small">{{ a.created_at|fmt_when }}</p></div></li>
+      {% else %}<li class="muted">No activity yet.</li>{% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

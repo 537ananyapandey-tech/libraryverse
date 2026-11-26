@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, empty_state %}
+{% block title %}My shelf{% endblock %}
+{% block content %}
+<div class="container page-head page-head-row">
+  <div>
+    <h1>{{ student.name }}</h1>
+    <p class="muted">Student ID {{ student.enrollment_no }}. Standard loan period is {{ loan_days }} days.</p>
+  </div>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="{{ url_for('public.books') }}">Browse the catalogue</a>
+    <form method="post" action="{{ url_for('student.logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-ghost" type="submit">{{ icon('log-out', 16) }} Sign out</button>
+    </form>
+  </div>
+</div>
+
+{% if overdue %}
+<div class="container"><div class="banner banner-warn" role="alert">{{ icon('alert', 20) }}
+  <p><strong>You have {{ overdue|length }} overdue book{{ 's' if overdue|length != 1 }}.</strong> Please return {{ 'them' if overdue|length != 1 else 'it' }} to the library desk.</p></div></div>
+{% endif %}
+
+<section class="container section" id="my-requests">
+  <div class="section-head"><h2>My issue requests ({{ requests|length }})</h2></div>
+  <div class="issue-list">
+    {% for q in requests %}
+    <article class="issue-row {{ 'returned' if q.status == 'REJECTED' else 'active' }}" style="--h:{{ q.hue }}">
+      <span class="issue-spine" aria-hidden="true"></span>
+      <div class="issue-main"><h3><a href="{{ url_for('public.book_detail', book_id=q.book_id) }}">{{ q.book_title }}</a></h3><p class="muted">{{ q.book_author.split(',')[0] }}</p></div>
+      <dl class="issue-dates"><div><dt>Requested</dt><dd>{{ q.requested_at|fmt_date }}</dd></div>
+        {% if q.status != 'PENDING' %}<div><dt>Decided</dt><dd>{{ q.decided_at|fmt_date }}</dd></div>{% endif %}</dl>
+      <div class="issue-status">
+        {% if q.status == 'PENDING' %}<span class="pill low">Pending</span>
+        {% elif q.status == 'APPROVED' %}<span class="pill ok">Approved</span>
+        {% else %}<span class="pill overdue">Rejected</span>{% endif %}
+      </div>
+    </article>
+    {% else %}<p class="muted">No requests yet. Open a book and tap “Request this book”.</p>{% endfor %}
+  </div>
+</section>
+
+<section class="container section">
+  <div class="section-head"><h2>Currently borrowed ({{ current|length }})</h2></div>
+  <div class="issue-list">
+    {% for r in current %}
+    <article class="issue-row {{ r.status }}" style="--h:{{ r.hue }}">
+      <span class="issue-spine" aria-hidden="true"></span>
+      <div class="issue-main"><h3><a href="{{ url_for('public.book_detail', book_id=r.book_id) }}">{{ r.book_title }}</a></h3><p class="muted">{{ r.book_author.split(',')[0] }}</p></div>
+      <dl class="issue-dates"><div><dt>Issued</dt><dd>{{ r.issue_date|fmt_date }}</dd></div><div><dt>Due</dt><dd>{{ r.due_date|fmt_date }}</dd></div></dl>
+      <div class="issue-status">
+        {% if r.return_pending %}<span class="pill low">Return pending approval{{ ' · fine ₹' ~ r.fine_now if r.fine_now }}</span>
+        {% elif r.status == 'overdue' %}<span class="pill overdue">{{ r.days_overdue }} day{{ 's' if r.days_overdue != 1 }} overdue</span>
+        {% else %}<span class="pill ok">{{ 'Due today' if r.days_left == 0 else r.days_left ~ ' days left' if r.days_left != 1 else '1 day left' }}</span>{% endif %}
+      </div>
+    </article>
+    {% else %}
+    {% call empty_state('No books on loan', 'Browse the catalogue and your next read will show up here.') %}{% endcall %}
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container section section-last">
+  <div class="section-head"><h2>Returned books ({{ returned|length }})</h2></div>
+  <div class="issue-list">
+    {% for r in returned %}
+    <article class="issue-row returned" style="--h:{{ r.hue }}">
+      <span class="issue-spine" aria-hidden="true"></span>
+      <div class="issue-main"><h3><a href="{{ url_for('public.book_detail', book_id=r.book_id) }}">{{ r.book_title }}</a></h3><p class="muted">{{ r.book_author.split(',')[0] }}</p></div>
+      <dl class="issue-dates"><div><dt>Issued</dt><dd>{{ r.issue_date|fmt_date }}</dd></div><div><dt>Returned</dt><dd>{{ r.returned_at|fmt_date }}</dd></div></dl>
+      <div class="issue-status"><span class="pill done">Returned{{ ' (' ~ r.days_late ~ ' days late)' if r.days_late }}</span>{% if r.fine_amount %}<span class="pill low">Fine ₹{{ r.fine_amount }} paid</span>{% endif %}</div>
+    </article>
+    {% else %}<p class="muted">Nothing returned yet.</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

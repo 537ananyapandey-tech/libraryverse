@@ -1,0 +1,54 @@
+{% macro icon(name, size=20) -%}
+<svg class="icon" width="{{ size }}" height="{{ size }}" aria-hidden="true" focusable="false"><use href="#i-{{ name }}"/></svg>
+{%- endmacro %}
+
+{# Generated cover: hue comes from the book's category, pattern from the book id. No images needed offline. #}
+{% macro cover(b, size='md') -%}
+<div class="cover p{{ b.id % 4 }} {{ size }}" style="--h:{{ b.hue }}" role="img" aria-label="Cover of {{ b.title }}">
+  <span class="cover-tag">{{ b.category_short }}</span>
+  <span class="cover-title">{{ b.title }}</span>
+  <span class="cover-author">{{ b.author.split(',')[0] }}</span>
+</div>
+{%- endmacro %}
+
+{% macro avail_pill(b) -%}
+{% if b.available_copies == 0 %}<span class="pill out">Unavailable</span>
+{% elif b.available_copies == 1 and b.total_copies > 1 %}<span class="pill low">Last copy</span>
+{% else %}<span class="pill ok">Available</span>{% endif %}
+{%- endmacro %}
+
+{% macro book_card(b) -%}
+<article class="book-card">
+  <a class="book-cover-link" href="{{ url_for('public.book_detail', book_id=b.id) }}" tabindex="-1" aria-hidden="true">{{ cover(b) }}</a>
+  <div class="book-meta">
+    <h3 class="book-title"><a href="{{ url_for('public.book_detail', book_id=b.id) }}">{{ b.title }}</a></h3>
+    <p class="book-author">{{ b.author }}</p>
+    <dl class="book-facts">
+      <div><dt>Publisher</dt><dd>{{ b.publisher or 'Not specified' }}</dd></div>
+      <div><dt>Edition</dt><dd>{{ b.edition or 'Not specified' }}</dd></div>
+      <div><dt>ISBN</dt><dd>{{ b.isbn or 'Not specified' }}</dd></div>
+    </dl>
+    <div class="book-foot">
+      <span class="chip" title="{{ b.category_name }}">{{ b.category_short }}</span>
+      {{ avail_pill(b) }}
+      <span class="copies">{{ b.available_copies }} of {{ b.total_copies }} in</span>
+    </div>
+  </div>
+</article>
+{%- endmacro %}
+
+{% macro empty_state(title, text) -%}
+<div class="empty">
+  <svg viewBox="0 0 220 140" width="220" height="140" role="img" aria-label="An empty bookshelf with one book tipped over">
+    <rect x="14" y="112" width="192" height="8" rx="4" fill="var(--bg3)"/>
+    <rect x="34" y="52" width="22" height="60" rx="3" fill="var(--purple)" opacity=".85"/>
+    <rect x="60" y="68" width="18" height="44" rx="3" fill="var(--mint)" opacity=".85"/>
+    <rect x="82" y="44" width="24" height="68" rx="3" fill="var(--orange)" opacity=".85"/>
+    <g transform="rotate(24 146 112)"><rect x="132" y="56" width="22" height="56" rx="3" fill="var(--purple)" opacity=".5"/></g>
+    <text x="172" y="46" font-size="30" font-weight="700" fill="var(--muted)" font-family="sans-serif">?</text>
+  </svg>
+  <h3>{{ title }}</h3>
+  <p>{{ text }}</p>
+  {{ caller() if caller else '' }}
+</div>
+{%- endmacro %}

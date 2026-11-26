@@ -1,0 +1,41 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Categories{% endblock %}
+{% block admin_content %}
+<div class="container page-head">
+  <h1>Categories</h1>
+  <p class="muted">Each category is an engineering branch or subject area. A category can only be deleted once it has no books.</p>
+</div>
+<section class="container grid-2 section-last">
+  <div class="panel">
+    <h2>Add a category</h2>
+    <form method="post" action="{{ url_for('admin.category_add') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field"><label for="c-name">Name</label><input id="c-name" name="name" required minlength="2" maxlength="60" placeholder="For example Biotechnology"></div>
+      <div class="field"><label for="c-short">Short code (optional)</label><input id="c-short" name="short_name" maxlength="8" placeholder="BIO"></div>
+      <button class="btn btn-primary" type="submit">{{ icon('plus', 18) }} Add category</button>
+    </form>
+  </div>
+  <div class="panel">
+    <h2>All categories</h2>
+    <ul class="cat-manage">
+      {% for c in categories %}
+      <li style="--h:{{ c.hue }}">
+        <form method="post" action="{{ url_for('admin.category_rename', cat_id=c.id) }}" class="cat-edit">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="sr-only" for="cn-{{ c.id }}">Name</label><input id="cn-{{ c.id }}" name="name" value="{{ c.name }}" required maxlength="60">
+          <label class="sr-only" for="cs-{{ c.id }}">Short code</label><input id="cs-{{ c.id }}" class="short" name="short_name" value="{{ c.short_name }}" required maxlength="8">
+          <button class="btn btn-ghost btn-sm" type="submit">Save</button>
+        </form>
+        <span class="muted small">{{ c.titles }} title{{ 's' if c.titles != 1 }}</span>
+        <form method="post" action="{{ url_for('admin.category_delete', cat_id=c.id) }}" data-confirm="Delete “{{ c.name }}”?"
+              data-confirm-body="This only works when the category has no books." data-confirm-label="Delete category">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="icon-btn danger" type="submit" aria-label="Delete {{ c.name }}">{{ icon('trash', 18) }}</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

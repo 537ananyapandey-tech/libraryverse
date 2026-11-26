@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, book_card, empty_state %}
+{% block title %}Find your next big idea{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <h1>Find Your Next <span class="nowrap">Big Idea.</span></h1>
+      <p class="lead">
+        Libraryverse is the engineering library for students: {{ stats.titles }} textbooks across
+        {{ stats.categories }} branches, from C and algorithms to thermodynamics and circuits.
+        Search, issue and return a book in under a minute.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('public.books') }}">Explore books {{ icon('arrow-right', 18) }}</a>
+        <a class="btn btn-ghost btn-lg" href="{{ url_for('public.dashboard') }}">Open dashboard</a>
+      </div>
+      <p class="tagline">Your next chapter starts here.</p>
+    </div>
+
+    <div class="hero-art" aria-label="A shelf of featured engineering books">
+      <div class="shelf">
+        {% for b in shelf %}
+        <a class="spine {{ 'lean' if loop.index == 4 }}" href="{{ url_for('public.book_detail', book_id=b.id) }}"
+           style="--h:{{ b.hue }}; --ht:{{ [300, 380, 340, 270, 360][loop.index0 % 5] }}px; --i:{{ loop.index0 }}"
+           aria-label="{{ b.title }} by {{ b.author }}">
+          <span>{{ b.title }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      <div class="slip slip-float" aria-hidden="true">
+        <p class="slip-title">Loan period</p>
+        <p class="slip-big">{{ LOAN_DAYS }} days</p>
+        <p class="slip-sub">Return on time, borrow again.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container strip" aria-label="Library at a glance">
+  <div><strong>{{ stats.titles }}</strong><span>titles in the catalogue</span></div>
+  <div><strong>{{ stats.available }}</strong><span>copies on the shelf now</span></div>
+  <div><strong>{{ stats.categories }}</strong><span>engineering branches</span></div>
+  <div><strong>{{ stats.students }}</strong><span>registered students</span></div>
+</section>
+
+<section class="container section">
+  <div class="section-head">
+    <h2>Featured engineering books</h2>
+    <a class="link-arrow" href="{{ url_for('public.books') }}">Browse all {{ stats.titles }} {{ icon('arrow-right', 16) }}</a>
+  </div>
+  <div class="book-grid">
+    {% for b in featured %}{{ book_card(b) }}{% endfor %}
+  </div>
+</section>
+
+<section class="container section">
+  <div class="section-head"><h2>Pick a branch</h2></div>
+  <div class="cat-grid">
+    {% for c in categories %}
+    <a class="cat-tile" style="--h:{{ c.hue }}" href="{{ url_for('public.books', category=c.id) }}">
+      <span class="cat-code">{{ c.short_name }}</span>
+      <span class="cat-name">{{ c.name }}</span>
+      <span class="cat-count">{{ c.titles }} title{{ 's' if c.titles != 1 }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container section">
+  <div class="section-head">
+    <h2>Recently added</h2>
+    <a class="link-arrow" href="{{ url_for('public.books', sort='newest') }}">See newest first {{ icon('arrow-right', 16) }}</a>
+  </div>
+  <div class="book-row">
+    {% for b in recent %}{{ book_card(b) }}{% else %}
+      {% call empty_state('No books yet', 'Add the first book from the admin panel.') %}{% endcall %}
+    {% endfor %}
+  </div>
+</section>
+
+<section class="container section">
+  <div class="cta-band">
+    <div>
+      <h2>Need a book in your hands today?</h2>
+      <p>Pick a title, enter your student ID and it is yours for {{ LOAN_DAYS }} days.</p>
+    </div>
+    <a class="btn btn-accent btn-lg" href="{{ url_for('public.issue_page') if is_admin else url_for('public.books') }}">{{ 'Issue a book' if is_admin else 'Request a book' }}</a>
+  </div>
+</section>
+{% endblock %}

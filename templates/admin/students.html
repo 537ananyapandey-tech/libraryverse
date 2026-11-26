@@ -1,0 +1,25 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import empty_state %}
+{% block title %}Students{% endblock %}
+{% block admin_content %}
+<div class="container page-head">
+  <h1>Registered students</h1>
+  <p class="muted">Students are registered automatically the first time a book is issued to them.</p>
+</div>
+<section class="container">
+  {% if students %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Student</th><th>ID</th><th>On loan</th><th>Overdue</th><th>All-time loans</th><th>Registered</th></tr></thead>
+      <tbody>
+      {% for s in students %}
+      <tr><td><strong>{{ s.name }}</strong></td><td>{{ s.enrollment_no }}</td><td>{{ s.active }}</td>
+        <td>{% if s.overdue %}<span class="pill overdue">{{ s.overdue }}</span>{% else %}0{% endif %}</td>
+        <td>{{ s.total_issued }}</td><td>{{ s.created_at|fmt_date }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}{% call empty_state('No students yet', 'Issue a book to register the first student.') %}{% endcall %}{% endif %}
+</section>
+{% endblock %}

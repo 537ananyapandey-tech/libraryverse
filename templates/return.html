@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Return a book{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+  <h1>Return a book</h1>
+  <p class="muted">Find the loan by student ID, student name or book title, then press Return. Overdue books are listed first. Late returns cost ₹{{ fine_per_day }} per day, and every return waits for admin approval.</p>
+</div>
+
+<section class="container" id="return-app" data-list-url="{{ url_for('api.issues') }}" data-return-url="{{ url_for('api.return_book', issue_id=0) }}">
+  <div class="filters filters-compact">
+    <div class="field field-search">
+      <label for="r-q">Search loans</label>
+      <div class="input-icon">{{ icon('search', 18) }}
+        <input id="r-q" type="search" placeholder="Student ID, name or book title" value="{{ q }}" autocomplete="off">
+      </div>
+    </div>
+    <fieldset class="seg" aria-label="Loan status">
+      <label><input type="radio" name="status" value="active" checked><span>On loan</span></label>
+      <label><input type="radio" name="status" value="overdue"><span>Overdue</span></label>
+      <label><input type="radio" name="status" value="returned"><span>Returned</span></label>
+      <label><input type="radio" name="status" value="all"><span>All history</span></label>
+    </fieldset>
+  </div>
+
+  <p id="r-count" class="result-bar" aria-live="polite">Loading loans…</p>
+  <div id="r-list" class="issue-list" aria-busy="true"></div>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/circulation.js') }}" defer></script>{% endblock %}

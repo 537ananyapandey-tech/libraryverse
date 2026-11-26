@@ -1,0 +1,59 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}{{ 'Edit book' if book else 'Add a book' }}{% endblock %}
+{% block admin_content %}
+{% macro err(name) %}{% if errors.get(name) %}<p class="field-error show" id="err-{{ name }}" role="alert">{{ errors[name] }}</p>{% endif %}{% endmacro %}
+<div class="container page-head">
+  <h1>{{ 'Edit book' if book else 'Add a book' }}</h1>
+  <p class="muted">Leave edition or ISBN blank when you are not sure. The catalogue will show “Not specified”.</p>
+</div>
+<section class="container">
+  <form class="panel form-panel wide" method="post" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field {{ 'invalid' if errors.title }}"><label for="title">Title</label>
+      <input id="title" name="title" required maxlength="200" value="{{ form.get('title', '') }}">{{ err('title') }}</div>
+    <div class="field {{ 'invalid' if errors.author }}"><label for="author">Author(s)</label>
+      <input id="author" name="author" required maxlength="200" value="{{ form.get('author', '') }}" placeholder="Separate several authors with commas">{{ err('author') }}</div>
+    <div class="field-row">
+      <div class="field {{ 'invalid' if errors.publisher }}"><label for="publisher">Publisher</label>
+        <input id="publisher" name="publisher" maxlength="120" value="{{ form.get('publisher', '') }}">{{ err('publisher') }}</div>
+      <div class="field {{ 'invalid' if errors.edition }}"><label for="edition">Edition</label>
+        <input id="edition" name="edition" maxlength="40" value="{{ form.get('edition', '') }}" placeholder="For example 3rd">{{ err('edition') }}</div>
+    </div>
+    <div class="field-row">
+      <div class="field {{ 'invalid' if errors.isbn }}"><label for="isbn">ISBN (10 or 13 digits)</label>
+        <input id="isbn" name="isbn" maxlength="17" value="{{ form.get('isbn', '') }}" placeholder="Optional">{{ err('isbn') }}</div>
+      <div class="field {{ 'invalid' if errors.total_copies }}"><label for="total_copies">Total copies</label>
+        <input id="total_copies" name="total_copies" type="number" min="0" max="999" required value="{{ form.get('total_copies', '') }}">{{ err('total_copies') }}</div>
+    </div>
+    <div class="field-row">
+      <div class="field {{ 'invalid' if errors.category_id }}"><label for="category_id">Branch / category</label>
+        <select id="category_id" name="category_id" required>
+          <option value="">Choose a branch</option>
+          {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if form.get('category_id')|string == c.id|string }}>{{ c.name }}</option>{% endfor %}
+        </select>{{ err('category_id') }}</div>
+      <div class="field {{ 'invalid' if errors.subject }}"><label for="subject">Subject</label>
+        <input id="subject" name="subject" maxlength="80" value="{{ form.get('subject', '') }}" placeholder="For example Algorithms">{{ err('subject') }}</div>
+    </div>
+    <h2 class="sub-h">Shelf location</h2>
+    <div class="field-row">
+      <div class="field {{ 'invalid' if errors.shelf_block }}"><label for="shelf_block">Block / section</label>
+        <input id="shelf_block" name="shelf_block" maxlength="40" value="{{ form.get('shelf_block', '') }}" placeholder="For example Block A">{{ err('shelf_block') }}</div>
+      <div class="field {{ 'invalid' if errors.shelf_floor }}"><label for="shelf_floor">Floor</label>
+        <input id="shelf_floor" name="shelf_floor" maxlength="20" value="{{ form.get('shelf_floor', '') }}" placeholder="For example 2nd">{{ err('shelf_floor') }}</div>
+    </div>
+    <div class="field-row">
+      <div class="field {{ 'invalid' if errors.shelf_rack }}"><label for="shelf_rack">Rack number</label>
+        <input id="shelf_rack" name="shelf_rack" maxlength="20" value="{{ form.get('shelf_rack', '') }}" placeholder="For example R-12">{{ err('shelf_rack') }}</div>
+      <div class="field {{ 'invalid' if errors.shelf_number }}"><label for="shelf_number">Shelf number</label>
+        <input id="shelf_number" name="shelf_number" maxlength="20" value="{{ form.get('shelf_number', '') }}" placeholder="For example 3">{{ err('shelf_number') }}</div>
+    </div>
+    <div class="field {{ 'invalid' if errors.description }}"><label for="description">Description</label>
+      <textarea id="description" name="description" rows="4" maxlength="2000" placeholder="One or two sentences in your own words">{{ form.get('description', '') }}</textarea>{{ err('description') }}</div>
+    <div class="hero-actions">
+      <button class="btn btn-primary btn-lg" type="submit">{{ 'Save changes' if book else 'Add book' }}</button>
+      <a class="btn btn-ghost btn-lg" href="{{ url_for('admin.books') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import icon, empty_state %}
+{% block title %}Manage books{% endblock %}
+{% block admin_content %}
+<div class="container page-head page-head-row">
+  <div><h1>Manage books</h1><p class="muted">{{ result.total }} title{{ 's' if result.total != 1 }} in the catalogue.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('admin.book_new') }}">{{ icon('plus', 18) }} Add a book</a>
+</div>
+<section class="container">
+  <form class="filters filters-compact" method="get">
+    <div class="field field-search"><label for="a-q">Search</label>
+      <div class="input-icon">{{ icon('search', 18) }}<input id="a-q" name="q" type="search" value="{{ args.get('q', '') }}" placeholder="Title, author or ISBN"></div></div>
+    <div class="field"><label for="a-cat">Branch</label>
+      <select id="a-cat" name="category"><option value="">All branches</option>
+        {% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if args.get('category') == c.id|string }}>{{ c.name }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="a-sort">Sort</label>
+      <select id="a-sort" name="sort">
+        <option value="title" {{ 'selected' if args.get('sort', 'title') == 'title' }}>Title A to Z</option>
+        <option value="newest" {{ 'selected' if args.get('sort') == 'newest' }}>Recently added</option>
+        <option value="popular" {{ 'selected' if args.get('sort') == 'popular' }}>Most issued</option></select></div>
+    <button class="btn btn-ghost" type="submit">Apply</button>
+  </form>
+
+  {% if result["items"] %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Book</th><th>Branch</th><th>In / total</th><th>Update stock</th><th class="right">Actions</th></tr></thead>
+      <tbody>
+      {% for b in result["items"] %}
+        <tr>
+          <td><a href="{{ url_for('public.book_detail', book_id=b.id) }}"><strong>{{ b.title }}</strong></a><br><span class="muted small">{{ b.author }}</span></td>
+          <td><span class="chip">{{ b.category_short }}</span></td>
+          <td>{{ b.available_copies }} / {{ b.total_copies }}</td>
+          <td>
+            <form class="inline-form" method="post" action="{{ url_for('admin.book_stock', book_id=b.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label class="sr-only" for="stock-{{ b.id }}">Total copies for {{ b.title }}</label>
+              <input class="num" id="stock-{{ b.id }}" name="total_copies" type="number" min="0" max="999" value="{{ b.total_copies }}" required>
+              <button class="btn btn-ghost btn-sm" type="submit">Save</button>
+            </form>
+          </td>
+          <td class="right actions">
+            <a class="icon-btn" href="{{ url_for('admin.book_edit', book_id=b.id) }}" aria-label="Edit {{ b.title }}">{{ icon('pencil', 18) }}</a>
+            <form method="post" action="{{ url_for('admin.book_delete', book_id=b.id) }}" data-confirm="Delete “{{ b.title }}”?"
+                  data-confirm-body="Books that have never been issued are deleted for good. Books with loan history are hidden from the catalogue but their records are kept." data-confirm-label="Delete book">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="icon-btn danger" type="submit" aria-label="Delete {{ b.title }}">{{ icon('trash', 18) }}</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <nav class="pager" aria-label="Pages">
+    {% if result.page > 1 %}<a class="btn btn-ghost btn-sm" href="{{ url_for('admin.books', page=result.page - 1, q=args.get('q'), category=args.get('category'), sort=args.get('sort')) }}">{{ icon('arrow-left', 16) }} Previous</a>{% endif %}
+    <span class="muted">Page {{ result.page }} of {{ result.pages }}</span>
+    {% if result.has_more %}<a class="btn btn-ghost btn-sm" href="{{ url_for('admin.books', page=result.page + 1, q=args.get('q'), category=args.get('category'), sort=args.get('sort')) }}">Next {{ icon('arrow-right', 16) }}</a>{% endif %}
+  </nav>
+  {% else %}
+    {% call empty_state('No books found', 'Nothing matches those filters. Clear them or add a new book.') %}{% endcall %}
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Issue a book{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+  <h1>Issue a book</h1>
+  <p class="muted">Fill in the student and pick a title. The due date slip on the right updates as you type.</p>
+</div>
+
+<section class="container issue-layout">
+  <form id="issue-form" class="panel form-panel" novalidate
+        data-issue-url="{{ url_for('api.issue') }}" data-books-url="{{ url_for('api.book_options') }}"
+        data-student-url="{{ '/api/students/' }}" data-loan-days="{{ LOAN_DAYS }}"
+        data-book-title="{{ book.title if book }}">
+    <div class="field">
+      <label for="student_no">Student ID / enrollment number</label>
+      <input id="student_no" name="student_no" type="text" required maxlength="20" autocomplete="off"
+             placeholder="For example CS24001" value="{{ prefill_no }}" aria-describedby="hint-student err-student_no">
+      <p class="hint" id="hint-student">Demo students: CS24001, AI24003, EC24004.</p>
+      <p class="field-error" id="err-student_no" role="alert"></p>
+    </div>
+
+    <div class="field">
+      <label for="student_name">Student name</label>
+      <input id="student_name" name="student_name" type="text" required maxlength="80" autocomplete="off"
+             placeholder="Full name" value="{{ prefill_name }}">
+      <p class="field-error" id="err-student_name" role="alert"></p>
+    </div>
+
+    <div class="field" id="book-field">
+      <label for="book-search">Book</label>
+      <input type="hidden" id="book_id" name="book_id" value="{{ book.id if book }}">
+      <div id="book-chosen" class="chosen" {% if not book %}hidden{% endif %}>
+        <span id="chosen-title">{{ book.title if book }}</span>
+        <button type="button" id="change-book" class="link-btn">Change</button>
+      </div>
+      <div id="book-picker" {% if book %}hidden{% endif %}>
+        <div class="input-icon">{{ icon('search', 18) }}
+          <input id="book-search" type="search" role="combobox" aria-expanded="false" aria-controls="book-options"
+                 placeholder="Search title, author or ISBN" autocomplete="off">
+        </div>
+        <ul id="book-options" class="picker-list" role="listbox" hidden></ul>
+      </div>
+      <p class="field-error" id="err-book_id" role="alert"></p>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="issue_date">Issue date</label>
+        <input id="issue_date" name="issue_date" type="date" required value="{{ today }}" min="{{ min_date }}" max="{{ today }}">
+        <p class="field-error" id="err-issue_date" role="alert"></p>
+      </div>
+      <div class="field">
+        <label for="due_date">Due date</label>
+        <input id="due_date" name="due_date" type="date" required value="{{ due }}" min="{{ today }}">
+        <p class="field-error" id="err-due_date" role="alert"></p>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" type="submit" id="issue-submit">Issue book</button>
+  </form>
+
+  <aside class="slip-col" aria-label="Due date slip">
+    <div class="slip" id="slip">
+      <p class="slip-title">Libraryverse due date slip</p>
+      <dl class="slip-rows">
+        <div><dt>Student</dt><dd id="slip-student">Not entered yet</dd></div>
+        <div><dt>Book</dt><dd id="slip-book">{{ book.title if book else 'Not chosen yet' }}</dd></div>
+        <div><dt>Issued</dt><dd id="slip-issue">{{ today }}</dd></div>
+        <div><dt>Return by</dt><dd id="slip-due" class="slip-due">{{ due }}</dd></div>
+      </dl>
+      <div class="stamp" id="stamp" hidden>Issued</div>
+    </div>
+    <div id="after-issue" class="after-issue" hidden>
+      <p id="after-text"></p>
+      <div class="hero-actions">
+        <button type="button" class="btn btn-primary" id="issue-another">Issue another book</button>
+        <a class="btn btn-ghost" href="{{ url_for('public.dashboard') }}">See dashboard</a>
+      </div>
+    </div>
+  </aside>
+</section>
+{% endblock %}
+
+{% block scripts %}<script src="{{ url_for('static', filename='js/circulation.js') }}" defer></script>{% endblock %}

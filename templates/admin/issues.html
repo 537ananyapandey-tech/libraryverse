@@ -1,0 +1,41 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import icon, empty_state %}
+{% block title %}Loans{% endblock %}
+{% block admin_content %}
+<div class="container page-head">
+  <h1>Loans and returns</h1>
+  <p class="muted">{{ total }} record{{ 's' if total != 1 }} match this view.</p>
+</div>
+<section class="container">
+  <form class="filters filters-compact" method="get">
+    <div class="field field-search"><label for="i-q">Search</label>
+      <div class="input-icon">{{ icon('search', 18) }}<input id="i-q" name="q" type="search" value="{{ q }}" placeholder="Student, ID or book"></div></div>
+    <fieldset class="seg" aria-label="Status">
+      {% for value, label in [('all', 'All'), ('active', 'On loan'), ('overdue', 'Overdue'), ('returned', 'Returned'), ('pending_return', 'Pending return')] %}
+      <label><input type="radio" name="status" value="{{ value }}" {{ 'checked' if status == value }} onchange="this.form.submit()"><span>{{ label }}</span></label>
+      {% endfor %}
+    </fieldset>
+    <button class="btn btn-ghost" type="submit">Search</button>
+  </form>
+  {% if issues %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Book</th><th>Student</th><th>Issued</th><th>Due</th><th>Returned</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for r in issues %}
+        <tr class="{{ 'row-overdue' if r.status == 'overdue' }}">
+          <td><a href="{{ url_for('public.book_detail', book_id=r.book_id) }}">{{ r.book_title }}</a></td>
+          <td>{{ r.student_name }}<br><span class="muted small">{{ r.enrollment_no }}</span></td>
+          <td>{{ r.issue_date|fmt_date }}</td><td>{{ r.due_date|fmt_date }}</td>
+          <td>{{ r.returned_at|fmt_date if r.returned_at else '–' }}</td>
+          <td>{% if r.status == 'overdue' %}<span class="pill overdue">{{ r.days_overdue }}d overdue</span>
+              {% elif r.status == 'active' %}<span class="pill ok">On loan</span>
+              {% else %}<span class="pill done">Returned</span>{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}{% call empty_state('No loans here', 'Nothing matches this filter yet.') %}{% endcall %}{% endif %}
+</section>
+{% endblock %}

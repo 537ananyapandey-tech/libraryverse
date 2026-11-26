@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Student sign in{% endblock %}
+{% block content %}
+<section class="container narrow">
+  <div class="panel form-panel">
+    <h1>Student sign in</h1>
+    <p class="muted">See your loans, due dates and reading history.</p>
+    <form method="post" action="{{ url_for('student.login') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="enrollment_no">Student ID</label>
+        <input id="enrollment_no" name="enrollment_no" required autocomplete="username" value="{{ enrollment_no }}" placeholder="For example CS24001">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password">
+        <p class="hint">Demo password for every seeded student: <code>student123</code></p>
+      </div>
+      <button class="btn btn-primary btn-lg" type="submit">Sign in</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

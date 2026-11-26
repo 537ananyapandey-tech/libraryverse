@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block content %}
+{% set ep = request.endpoint %}
+<div class="container admin-bar">
+  <nav class="tabs" aria-label="Admin sections">
+    <a href="{{ url_for('admin.dashboard') }}" {% if ep == 'admin.dashboard' %}aria-current="page"{% endif %}>{{ icon('layout', 16) }} Overview</a>
+    <a href="{{ url_for('admin.books') }}" {% if ep in ('admin.books', 'admin.book_new', 'admin.book_edit') %}aria-current="page"{% endif %}>{{ icon('book', 16) }} Books</a>
+    <a href="{{ url_for('admin.issues') }}" {% if ep == 'admin.issues' %}aria-current="page"{% endif %}>{{ icon('clock', 16) }} Loans</a>
+    <a href="{{ url_for('admin.students') }}" {% if ep == 'admin.students' %}aria-current="page"{% endif %}>{{ icon('users', 16) }} Students</a>
+    <a href="{{ url_for('admin.categories') }}" {% if ep == 'admin.categories' %}aria-current="page"{% endif %}>{{ icon('layers', 16) }} Categories</a>
+    <a href="{{ url_for('admin.reports') }}" {% if ep == 'admin.reports' %}aria-current="page"{% endif %}>{{ icon('chart', 16) }} Reports</a>
+  </nav>
+  <form method="post" action="{{ url_for('admin.logout') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-ghost btn-sm" type="submit">{{ icon('log-out', 16) }} Sign out</button>
+  </form>
+</div>
+{% block admin_content %}{% endblock %}
+{% endblock %}

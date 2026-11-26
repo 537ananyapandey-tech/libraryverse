@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% from "_macros.html" import empty_state %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="container narrow section">
+  {% call empty_state(title, message) %}
+    <p class="small muted">Error {{ code }}</p>
+    <div class="hero-actions center"><a class="btn btn-primary" href="{{ url_for('public.books') }}">Explore books</a><a class="btn btn-ghost" href="{{ url_for('public.index') }}">Go home</a></div>
+  {% endcall %}
+</section>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends "admin/base_admin.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Admin overview{% endblock %}
+{% block admin_content %}
+<div class="container page-head page-head-row">
+  <div><h1>Admin overview</h1><p class="muted">Signed in as {{ session.get('admin_name') }}.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('admin.book_new') }}">{{ icon('plus', 18) }} Add a book</a>
+</div>
+<section class="container stat-grid">
+  <div class="stat s-purple"><span class="stat-label">Titles</span><strong>{{ stats.titles }}</strong><span class="stat-note">{{ stats.copies }} copies</span></div>
+  <div class="stat s-mint"><span class="stat-label">Available</span><strong>{{ stats.available }}</strong><span class="stat-note">copies in</span></div>
+  <div class="stat s-orange"><span class="stat-label">On loan</span><strong>{{ stats.issued }}</strong><span class="stat-note">copies out</span></div>
+  <div class="stat s-orange"><span class="stat-label">Overdue</span><strong>{{ stats.overdue }}</strong><span class="stat-note">need chasing</span></div>
+  <div class="stat s-purple"><span class="stat-label">Students</span><strong>{{ stats.students }}</strong><span class="stat-note">{{ stats.transactions }} loans so far</span></div>
+</section>
+<section class="container section" id="requests">
+  <div class="panel">
+    <h2>Pending issue requests ({{ pending|length }})</h2>
+    <ul class="list">
+      {% for q in pending %}
+      <li style="--h:{{ q.hue }}"><i class="list-dot"></i>
+        <div><a href="{{ url_for('public.book_detail', book_id=q.book_id) }}">{{ q.book_title }}</a>
+          <p class="muted small">{{ q.student_name }} ({{ q.enrollment_no }}), requested {{ q.requested_at|fmt_when }}, {{ q.available_copies }} of {{ q.total_copies }} in stock</p></div>
+        <div class="hero-actions">
+          <form method="post" action="{{ url_for('admin.request_decide', request_id=q.id, decision='approve') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-primary" type="submit">Approve</button></form>
+          <form method="post" action="{{ url_for('admin.request_decide', request_id=q.id, decision='reject') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-ghost" type="submit">Reject</button></form>
+        </div></li>
+      {% else %}<li class="muted">No pending requests.</li>{% endfor %}
+    </ul>
+  </div>
+</section>
+<section class="container section" id="returns">
+  <div class="panel">
+    <h2>Pending return approvals ({{ pending_returns|length }})</h2>
+    <ul class="list">
+      {% for r in pending_returns %}
+      <li style="--h:{{ r.hue }}"><i class="list-dot"></i>
+        <div><a href="{{ url_for('public.book_detail', book_id=r.book_id) }}">{{ r.book_title }}</a>
+          <p class="muted small">{{ r.student_name }} ({{ r.enrollment_no }}), due {{ r.due_date|fmt_date }}, {{ r.late_days_now }} day{{ 's' if r.late_days_now != 1 }} late · <strong>Fine ₹{{ r.fine_now }}</strong></p></div>
+        <form method="post" action="{{ url_for('admin.return_approve', issue_id=r.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary" type="submit">Approve return{{ ' & fine' if r.fine_now }}</button></form></li>
+      {% else %}<li class="muted">No returns waiting for approval.</li>{% endfor %}
+    </ul>
+  </div>
+</section>
+<section class="container grid-2 section-last">
+  <div class="panel">
+    <h2>Overdue books</h2>
+    <ul class="list">
+      {% for r in overdue %}
+      <li style="--h:{{ r.hue }}"><i class="list-dot"></i>
+        <div><a href="{{ url_for('public.book_detail', book_id=r.book_id) }}">{{ r.book_title }}</a>
+          <p class="muted small">{{ r.student_name }} ({{ r.enrollment_no }})</p></div>
+        <span class="pill overdue">{{ r.days_overdue }}d late</span></li>
+      {% else %}<li class="muted">No overdue books. Nice work.</li>{% endfor %}
+    </ul>
+    <a class="link-arrow" href="{{ url_for('admin.issues', status='overdue') }}">All overdue loans {{ icon('arrow-right', 16) }}</a>
+  </div>
+  <div class="panel">
+    <h2>Recent transactions</h2>
+    <ul class="list">
+      {% for r in recent %}
+      <li style="--h:{{ r.hue }}"><i class="list-dot"></i>
+        <div><a href="{{ url_for('public.book_detail', book_id=r.book_id) }}">{{ r.book_title }}</a>
+          <p class="muted small">{{ r.student_name }}, {{ r.issue_date|fmt_date }}</p></div>
+        {% if r.status == 'returned' %}<span class="pill done">Returned</span>
+        {% elif r.status == 'overdue' %}<span class="pill overdue">Overdue</span>
+        {% else %}<span class="pill ok">On loan</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    <h2 class="sub-h">Activity log</h2>
+    <ul class="list activity">
+      {% for a in activity %}<li><i class="list-dot act-{{ a.action }}"></i><div><p>{{ a.detail }}</p><p class="muted small">{{ a.created_at|fmt_when }} by {{ a.actor }}</p></div></li>{% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}
